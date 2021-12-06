@@ -5,16 +5,17 @@
  *  It uses the RFID reader 125kHz v1.0 from SeeedStudio
  *  CHECK THAT YOUR RFID TAGS ARE ALSO LABELED 125kHz
  *  
- *  Modified on Dec 1, 2020
+ *  Created on Dec 1, 2020
+ *  Last Modified on Dec 6, 2021
  *  IMA @NYU SHANGHAI
  */
-
-#include <SoftwareSerial.h>
-SoftwareSerial SoftSerial(2, 3);
+#include <SoftwareSerial.h> 
+SoftwareSerial SoftSerial(2, 3);// RX, TX
 unsigned char buffer[64];       // buffer array for data receive over serial port
 int count = 0;                    // counter for buffer array
-String rfid;
-char c;
+String player1 = "24851484866526551524953533";
+String player2 = "24851484866657049526948543";
+String card = "";
 void setup()
 {
   SoftSerial.begin(9600);     // the SoftSerial baud rate
@@ -27,24 +28,38 @@ void loop()
   {
     while (SoftSerial.available())              // reading data into char array
     {
-      c = SoftSerial.read();
-      if ( (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F')) {
-        rfid += c;
-      }
-      buffer[count++] = c;      // writing data into array
+      buffer[count] = SoftSerial.read();      // writing data into array
+      card += buffer[count];
+      count++;
       if (count == 64)break;
     }
+    //Serial.write(buffer, count);     // if no data transmission ends, write buffer to hardware serial port
     clearBufferArray();             // call clearBufferArray function to clear the stored data from the array
     count = 0;                      // set counter of while loop to zero
+    if (card.length() >= 26) {
+       Serial.println(card);      //for debugging, you can show the numbers
+      if (card.equals(player1)) {
+        Serial.println("1");
+      } else if (card.equals(player2)) {
+        Serial.println("2");
+      } else {
+        Serial.println("0");
+      }
+      card = "";
+    }
   }
-  if (rfid.length() > 11) {
-    if (rfid == "xxx") Serial.println("xxx");
-    rfid = "";
-  }
-  //    if (Serial.available())             // if data is available on hardware serial port ==> data is coming from PC or notebook
-  //    SoftSerial.write(Serial.read());    // write it to the SoftSerial shield
+  if (Serial.available())             // if data is available on hardware serial port ==> data is coming from PC or notebook
+    SoftSerial.write(Serial.read());    // write it to the SoftSerial shield
 }
 void clearBufferArray()                 // function to clear buffer array
+{
+  // clear all index of array with command NULL
+  for (int i = 0; i < count; i++)
+  {
+    buffer[i] = NULL;
+  }
+}
+void compArray()                 // function to clear buffer array
 {
   // clear all index of array with command NULL
   for (int i = 0; i < count; i++)
